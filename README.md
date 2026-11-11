@@ -19,9 +19,9 @@ the remaining game world. Author: **olqs**. License: **MIT**.
 - UI elements from other addons are **not** moved or reprofiled automatically.
 - No external addon dependencies are required.
 
-### Beta status and limitations
+### Testing status and limitations
 
-Version **0.2.0** is a public beta. Opening settings, switching the two built-in
+Version **0.2.0** is the initial public release. Opening settings, switching the two built-in
 profiles and preserving settings across `/reload` have been tested in the live
 Forever client. Combat, cinematics, resolution changes and a full relog have
 not yet been verified in-game. Combat changes are designed to be deferred

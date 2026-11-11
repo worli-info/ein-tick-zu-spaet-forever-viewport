@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — Public beta — 2026-11-11
+## 0.2.0 — Initial release — 2026-11-11
 
 - Real WorldFrame insets for WoW Forever (Interface 16001).
 - Optional black backgrounds for reserved screen edges.
