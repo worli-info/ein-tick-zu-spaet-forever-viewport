@@ -1,4 +1,5 @@
-local ADDON_NAME = ...
+local ADDON_NAME, Addon = ...
+local L = Addon.L
 
 local PROFILE_DEFAULTS = {
     enabled = true,
@@ -102,6 +103,12 @@ local function GetProfile()
     return EinTickZuSpaetForeverViewportDB.profiles[EinTickZuSpaetForeverViewportDB.activeProfile]
 end
 
+local function DisplayProfileName(name)
+    if name == "Aktuell" then return L.current end
+    if name == "Neu" then return L.new end
+    return name
+end
+
 local function FindProfileName(searchName)
     if not searchName then
         return nil
@@ -112,6 +119,9 @@ local function FindProfileName(searchName)
             return name
         end
     end
+    -- Keep SavedVariables keys unchanged when switching the client language.
+    if lowered == "current" then return "Aktuell" end
+    if lowered == "new" then return "Neu" end
 end
 
 local function CreatePanel(name)
@@ -181,7 +191,7 @@ end
 local function ApplyViewport()
     if InCombatLockdown and InCombatLockdown() then
         pendingApply = true
-        Print("Profilwechsel wird nach dem Kampf angewendet.")
+        Print(L.combatDeferred)
         return
     end
 
@@ -204,13 +214,13 @@ end
 local function ActivateProfile(name)
     local resolvedName = FindProfileName(name)
     if not resolvedName then
-        Print("Profil '" .. tostring(name) .. "' wurde nicht gefunden.")
+        Print(string.format(L.profileNotFound, tostring(name)))
         return false
     end
 
     EinTickZuSpaetForeverViewportDB.activeProfile = resolvedName
     ApplyViewport()
-    Print("Profil '" .. resolvedName .. "' aktiviert.")
+    Print(string.format(L.profileActivated, DisplayProfileName(resolvedName)))
     if optionsFrame and optionsFrame:IsShown() and optionsFrame.Refresh then
         optionsFrame:Refresh()
     end
@@ -220,9 +230,9 @@ end
 local function Status()
     local profile = GetProfile()
     Print(string.format(
-        "Profil '%s': Viewport %s – oben %d, unten %d, links %d, rechts %d.",
-        EinTickZuSpaetForeverViewportDB.activeProfile,
-        profile.enabled and "an" or "aus",
+        L.status,
+        DisplayProfileName(EinTickZuSpaetForeverViewportDB.activeProfile),
+        profile.enabled and L.on or L.off,
         profile.top,
         profile.bottom,
         profile.left,
@@ -231,11 +241,11 @@ local function Status()
 end
 
 local function Help()
-    Print("/fvp – Einstellungsfenster öffnen")
-    Print("/fvp aktuell | /fvp neu – direkt zwischen den Layouts wechseln")
-    Print("/fvp profile list|use|save|delete [Name] – Profile verwalten")
-    Print("/fvp bottom|top|left|right <0-500> – aktives Profil ändern")
-    Print("/fvp on|off | background on|off | status | reset")
+    Print(L.helpOptions)
+    Print(L.helpSwitch)
+    Print(L.helpProfiles)
+    Print(L.helpInsets)
+    Print(L.helpOther)
 end
 
 local function CreateLabel(parent, text, x, y)
@@ -292,15 +302,15 @@ local function InitializeOptions()
     frame.title:SetText("Ein Tick zu spät – Forever Viewport")
 
     frame.activeLabel = CreateLabel(frame, "", 18, -38)
-    CreateLabel(frame, "Schnellwechsel", 18, -68)
-    frame.currentButton = CreateButton(frame, "Aktuell", 120, 18, -90, function() ActivateProfile("Aktuell") end)
-    frame.newButton = CreateButton(frame, "Neu", 120, 148, -90, function() ActivateProfile("Neu") end)
+    CreateLabel(frame, L.quickSwitch, 18, -68)
+    frame.currentButton = CreateButton(frame, L.current, 120, 18, -90, function() ActivateProfile("Aktuell") end)
+    frame.newButton = CreateButton(frame, L.new, 120, 148, -90, function() ActivateProfile("Neu") end)
 
-    CreateLabel(frame, "Ränder des aktiven Profils", 18, -130)
-    CreateLabel(frame, "Oben", 18, -158)
-    CreateLabel(frame, "Unten", 118, -158)
-    CreateLabel(frame, "Links", 218, -158)
-    CreateLabel(frame, "Rechts", 318, -158)
+    CreateLabel(frame, L.insets, 18, -130)
+    CreateLabel(frame, L.top, 18, -158)
+    CreateLabel(frame, L.bottom, 118, -158)
+    CreateLabel(frame, L.left, 218, -158)
+    CreateLabel(frame, L.right, 318, -158)
     frame.topBox = CreateEditBox(frame, "TopInput", 18, -178)
     frame.bottomBox = CreateEditBox(frame, "BottomInput", 118, -178)
     frame.leftBox = CreateEditBox(frame, "LeftInput", 218, -178)
@@ -308,13 +318,13 @@ local function InitializeOptions()
 
     frame.enabledCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
     frame.enabledCheck:SetPoint("TOPLEFT", 14, -220)
-    frame.enabledCheck.Text:SetText("Echten Viewport aktivieren")
+    frame.enabledCheck.Text:SetText(L.enabled)
 
     frame.backgroundCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
     frame.backgroundCheck:SetPoint("TOPLEFT", 214, -220)
-    frame.backgroundCheck.Text:SetText("Schwarzen Hintergrund zeichnen")
+    frame.backgroundCheck.Text:SetText(L.background)
 
-    frame.applyButton = CreateButton(frame, "Anwenden", 120, 18, -275, function()
+    frame.applyButton = CreateButton(frame, L.apply, 120, 18, -275, function()
         local profile = GetProfile()
         profile.top = Clamp(tonumber(frame.topBox:GetText()) or profile.top, 0, 500)
         profile.bottom = Clamp(tonumber(frame.bottomBox:GetText()) or profile.bottom, 0, 500)
@@ -324,10 +334,10 @@ local function InitializeOptions()
         profile.background = frame.backgroundCheck:GetChecked() and true or false
         ApplyViewport()
         frame:Refresh()
-        Print("Profil '" .. EinTickZuSpaetForeverViewportDB.activeProfile .. "' gespeichert und angewendet.")
+        Print(string.format(L.profileApplied, DisplayProfileName(EinTickZuSpaetForeverViewportDB.activeProfile)))
     end)
-    frame.closeButton = CreateButton(frame, "Schließen", 120, 148, -275, function() frame:Hide() end)
-    frame.resetButton = CreateButton(frame, "Profil zurücksetzen", 130, 278, -275, function()
+    frame.closeButton = CreateButton(frame, L.close, 120, 148, -275, function() frame:Hide() end)
+    frame.resetButton = CreateButton(frame, L.reset, 130, 278, -275, function()
         local name = EinTickZuSpaetForeverViewportDB.activeProfile
         EinTickZuSpaetForeverViewportDB.profiles[name] = CopyTable(BUILTIN_PROFILES[name] or PROFILE_DEFAULTS)
         ApplyViewport()
@@ -338,11 +348,11 @@ local function InitializeOptions()
     frame.hint:SetPoint("BOTTOMLEFT", 18, 18)
     frame.hint:SetPoint("BOTTOMRIGHT", -18, 18)
     frame.hint:SetJustifyH("LEFT")
-    frame.hint:SetText("Aktuell stellt den vollen Spielbereich wieder her. Neu reserviert unten Platz für Chat, Threat und Damage.")
+    frame.hint:SetText(L.hint)
 
     function frame:Refresh()
         local profile = GetProfile()
-        self.activeLabel:SetText("Aktives Profil: |cffffffff" .. EinTickZuSpaetForeverViewportDB.activeProfile .. "|r")
+        self.activeLabel:SetText(string.format(L.activeProfile, DisplayProfileName(EinTickZuSpaetForeverViewportDB.activeProfile)))
         self.topBox:SetText(tostring(math.floor(profile.top + 0.5)))
         self.bottomBox:SetText(tostring(math.floor(profile.bottom + 0.5)))
         self.leftBox:SetText(tostring(math.floor(profile.left + 0.5)))
@@ -365,7 +375,7 @@ end
 local function SetInset(edge, value)
     local number = tonumber(value)
     if not number then
-        Print("Bitte eine Zahl zwischen 0 und 500 angeben.")
+        Print(L.invalidNumber)
         return
     end
     GetProfile()[edge] = Clamp(math.floor(number + 0.5), 0, 500)
@@ -373,43 +383,56 @@ local function SetInset(edge, value)
     Status()
 end
 
+local PROFILE_ACTIONS = {
+    liste = "list", verwenden = "use", speichern = "save",
+    ["löschen"] = "delete", loeschen = "delete",
+}
+
 local function HandleProfileCommand(arguments)
     local action = arguments[2] and string.lower(arguments[2])
+    action = PROFILE_ACTIONS[action] or action
     if action == "list" or not action then
         local names = {}
         for name in pairs(EinTickZuSpaetForeverViewportDB.profiles) do
-            names[#names + 1] = name
+            names[#names + 1] = DisplayProfileName(name)
         end
         table.sort(names)
-        Print("Profile: " .. table.concat(names, ", "))
+        Print(string.format(L.profiles, table.concat(names, ", ")))
     elseif action == "use" then
         ActivateProfile(arguments[3])
     elseif action == "save" then
         local name = arguments[3]
         if not name or name == "" then
-            Print("Verwendung: /fvp profile save <Name>")
+            Print(L.saveUsage)
             return
         end
         EinTickZuSpaetForeverViewportDB.profiles[name] = CopyTable(GetProfile())
         EinTickZuSpaetForeverViewportDB.activeProfile = name
-        Print("Profil '" .. name .. "' gespeichert.")
+        Print(string.format(L.profileSaved, DisplayProfileName(name)))
     elseif action == "delete" then
         local name = FindProfileName(arguments[3])
         if name == "Aktuell" or name == "Neu" then
-            Print("Die eingebauten Profile Aktuell und Neu können nicht gelöscht werden.")
+            Print(L.protectedProfiles)
         elseif not name then
-            Print("Profil wurde nicht gefunden.")
+            Print(L.missingProfile)
         else
             EinTickZuSpaetForeverViewportDB.profiles[name] = nil
             if EinTickZuSpaetForeverViewportDB.activeProfile == name then
                 ActivateProfile("Neu")
             end
-            Print("Profil '" .. name .. "' gelöscht.")
+            Print(string.format(L.profileDeleted, DisplayProfileName(name)))
         end
     else
         Help()
     end
 end
+
+local COMMAND_ALIASES = {
+    current = "aktuell", new = "neu", profil = "profile",
+    oben = "top", unten = "bottom", links = "left", rechts = "right",
+    an = "on", aus = "off", hintergrund = "background", bg = "background",
+    ["zurücksetzen"] = "reset", zuruecksetzen = "reset", hilfe = "help",
+}
 
 local function HandleSlashCommand(input)
     local arguments = {}
@@ -423,6 +446,7 @@ local function HandleSlashCommand(input)
     end
 
     local command = string.lower(arguments[1])
+    command = COMMAND_ALIASES[command] or command
     if command == "aktuell" or command == "neu" then
         ActivateProfile(command)
     elseif command == "profile" or command == "profil" then
@@ -436,11 +460,13 @@ local function HandleSlashCommand(input)
         ApplyViewport()
         Status()
     elseif command == "background" or command == "bg" then
-        if arguments[2] ~= "on" and arguments[2] ~= "off" then
-            Print("Verwendung: /fvp background on|off")
+        local state = arguments[2] and string.lower(arguments[2])
+        state = COMMAND_ALIASES[state] or state
+        if state ~= "on" and state ~= "off" then
+            Print(L.backgroundUsage)
             return
         end
-        GetProfile().background = arguments[2] == "on"
+        GetProfile().background = state == "on"
         UpdatePanels()
     elseif command == "status" then
         Status()

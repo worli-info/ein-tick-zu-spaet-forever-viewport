@@ -12,12 +12,45 @@ the remaining game world. Author: **olqs**. License: **MIT**.
   `Interface/AddOns/EinTickZuSpaetForeverViewport/EinTickZuSpaetForeverViewport.toc`.
 - Restart WoW after installing the addon for the first time.
 - Open settings with `/fvp`.
-- `/fvp aktuell` restores the full viewport; `/fvp neu` enables the bottom inset.
-- The default profile is **Neu**, reserving **145 UI units** at the bottom.
+- `/fvp current` restores the full viewport; `/fvp new` enables the bottom inset.
+- The default profile is **New**, reserving **145 UI units** at the bottom.
 - Adjust top, bottom, left and right insets independently (0–500 UI units).
 - Settings and named profiles are shared account-wide.
 - UI elements from other addons are **not** moved or reprofiled automatically.
 - No external addon dependencies are required.
+
+### Languages and commands (0.3.0)
+
+The settings window, help and chat messages are **German on deDE clients** and
+**English on every other client language**. The addon name is unchanged.
+Both English and German commands work in every language:
+
+| English | German | Action |
+|---|---|---|
+| `/fvp current` | `/fvp aktuell` | Restore full view |
+| `/fvp new` | `/fvp neu` | Activate inset profile |
+| `/fvp top 20` | `/fvp oben 20` | Set top inset |
+| `/fvp bottom 145` | `/fvp unten 145` | Set bottom inset |
+| `/fvp left 0` | `/fvp links 0` | Set left inset |
+| `/fvp right 0` | `/fvp rechts 0` | Set right inset |
+| `/fvp on` / `/fvp off` | `/fvp an` / `/fvp aus` | Enable / disable viewport |
+| `/fvp background on` | `/fvp hintergrund an` | Enable background (`off` / `aus` disables it) |
+| `/fvp profile list` | `/fvp profil liste` | List profiles |
+| `/fvp profile use Raid` | `/fvp profil verwenden Raid` | Activate a profile |
+| `/fvp profile save Raid` | `/fvp profil speichern Raid` | Save current settings as a profile |
+| `/fvp profile delete Raid` | `/fvp profil löschen Raid` | Delete a custom profile (`loeschen` also works) |
+| `/fvp reset` | `/fvp zurücksetzen` | Reset active profile (`zuruecksetzen` also works) |
+| `/fvp help` | `/fvp hilfe` | Show help |
+
+`/fvp status` works in both languages. `/fvp reload` and the existing
+`/fvp apply` alias reload the UI. Profile names containing spaces are not supported.
+
+Built-in profiles are displayed as **Current / New** in English and
+**Aktuell / Neu** in German. Existing SavedVariables keys and custom profile
+names are not translated or renamed. Changing the client language preserves
+settings and the selected profile. `profile use current|new` also resolves the
+built-in aliases, unless a custom profile already has that exact name; direct
+`/fvp current` and `/fvp new` always select the built-ins.
 
 ### Testing status and limitations
 
@@ -27,10 +60,15 @@ Forever client. Combat, cinematics, resolution changes and a full relog have
 not yet been verified in-game. Combat changes are designed to be deferred
 until combat ends, but this still needs live testing.
 
+The **0.3.0** localization changes have API-mock regression tests for German,
+English and the English fallback in other locales, bilingual commands,
+profile preservation and combat deferral. These changes still need visual
+verification in the live client. Run them with `lua tests/test-localization.lua .`.
+
 Do not combine it with another addon that also resizes `WorldFrame`.
 Insets are UI units, not physical display pixels; UI scale affects their size.
 The initial layout does not reposition chat, action bars, minimap or meters.
-Use `/fvp aktuell` to recover the full view or disable the addon from character
+Use `/fvp current` to recover the full view or disable the addon from character
 selection. Report bugs through the repository's Issues page with client build,
 UI scale, reproduction steps and any BugSack error. Remove private chat/account
 details from screenshots before uploading them.
@@ -62,6 +100,12 @@ Das Addon enthält zwei Profile:
 `/fvp` öffnet das Einstellungsfenster. Dort lassen sich das Profil wechseln,
 alle vier Ränder einstellen und der schwarze Hintergrund ein- oder ausschalten.
 Der Wechsel wird außerhalb des Kampfes sofort angewendet.
+
+Ab Version **0.3.0** ist die Oberfläche bei deutscher Spielsprache deutsch,
+ansonsten englisch. Deutsche und englische Befehle funktionieren unabhängig
+von der Spielsprache. Zum Beispiel entsprechen `/fvp current` und `/fvp new`
+den bisherigen Befehlen `/fvp aktuell` und `/fvp neu`. Die vollständige Tabelle
+steht oben. Bestehende Profile und Einstellungen bleiben beim Sprachwechsel erhalten.
 
 ```text
 /fvp
