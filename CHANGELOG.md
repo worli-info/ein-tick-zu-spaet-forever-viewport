@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 — Unreleased
+## 0.3.0 — Localization — 2026-11-15
 
 - German settings, help and messages on deDE; English fallback for all other locales.
 - English Current / New built-in profile labels and `/fvp current` / `/fvp new` aliases.
